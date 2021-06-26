@@ -61,8 +61,8 @@ async def status(ctx):
             except:
                 title = "NotFound"
             embed.add_field(name=f"{title}", value="Сервер выключен")
-    embed.set_footer(text="При поддержке https://wgstatus.com/wot")
-    await ctx.send(embed=embed)
+    embed.set_footer(text="При поддержке https://wgstatus.com/\nДанное сообщение удалится через 30 секунд!")
+    await ctx.send(embed=embed, delete_after=30)
 
 
-bot.run("ODU3MzYwMDAzNTEyNzk1MTY3.YNOcuQ.yMNZIcx-NEcKZecfCkpOgFgAOzg")
+bot.run("")
