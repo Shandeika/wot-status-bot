@@ -54,7 +54,11 @@ async def status(ctx):
                 title = data['title']
             except:
                 title = "NotFound"
-            embed.add_field(name=f"{title} {flag} {online}", value=text)
+            try:
+                version = data['version']
+            except:
+                version = ""
+            embed.add_field(name=f"{title} {flag} {online} {version}", value=text)
         except:
             try:
                 title = data['title']
