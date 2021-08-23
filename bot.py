@@ -25,7 +25,12 @@ async def info(ctx):
 async def status(ctx):
     embed = discord.Embed(title="Статус серверов World Of Tanks",
                           description="Все данные взяты из открытых источников, автор не несет ответственности за правильность данных.")
+    embed.set_footer(text="При поддержке https://wgstatus.com/\nДанное сообщение удалится через 30 секунд!")
     request = requests.get("https://api.wgstatus.com/api/data/wot")
+    if request.status_code != 200:
+        embed.add_field(name="Ошибка API", value=f"Код ответа сервера: {request.status_code}")
+        await ctx.send(embed=embed, delete_after=30)
+        return
     results = request.json()["results"][0]
     for i, item in enumerate(results):
         if i == 0 or i == 8:
@@ -65,7 +70,6 @@ async def status(ctx):
             except:
                 title = "NotFound"
             embed.add_field(name=f"{title}", value="Сервер выключен")
-    embed.set_footer(text="При поддержке https://wgstatus.com/\nДанное сообщение удалится через 30 секунд!")
     await ctx.send(embed=embed, delete_after=30)
 
 
