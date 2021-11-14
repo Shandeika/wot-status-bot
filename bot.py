@@ -1,6 +1,10 @@
 import requests
 import discord
 from discord.ext import commands
+import configparser
+
+config = configparser.ConfigParser()
+config.read("config.ini", encoding='utf-8')
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("//"), help_command=None)
 
@@ -73,4 +77,4 @@ async def status(ctx):
     await ctx.send(embed=embed, delete_after=30)
 
 
-bot.run("")
+bot.run(config["Config"]["token"])
