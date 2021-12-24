@@ -58,6 +58,10 @@ async def status(ctx: InteractionContext, server: int = None):
         "online": "<:online:741779665026547813>",
         "offline": "<:offline:741779665017897047>"
     }
+    status_word = {
+        "online": "Онлайн",
+        "offline": "Выключен"
+    }
     embed = Embed(title="Статус серверов World Of Tanks",
                   description="Все данные взяты из открытых источников, автор не несет ответственности за правильность данных.")
     embed.set_footer(text="При поддержке https://wgstatus.com/")
@@ -83,8 +87,7 @@ async def status(ctx: InteractionContext, server: int = None):
         servers = list()
         for server in data.get('servers'):
             server_title = f"Название: `{server.get('name')}`"
-            server_online = f"{status_emoji.get(server.get('status'))} Онлайн: `{server.get('online')}`" if server.get(
-                'online') is not None else f"{status_emoji.get(server.get('status'))} Выключен"
+            server_online = f"{status_emoji.get(server.get('status'))} Онлайн: `{server.get('online')}`" if server.get('online') is not None else f"{status_emoji.get(server.get('status'))} {status_word.get(server.get('status'))}"
             servers.append([server_title, server_online])
         for server in servers:
             embed.add_field(name=server[0], value=server[1], inline=True)
