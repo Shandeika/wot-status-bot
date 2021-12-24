@@ -1,0 +1,3 @@
+requests
+dis-snek
+orjson
