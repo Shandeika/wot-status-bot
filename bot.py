@@ -1,4 +1,5 @@
 import configparser
+import logging
 
 import requests
 from dis_snek.client import Snake
@@ -8,6 +9,14 @@ from dis_snek.models.listener import listen
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding='utf-8')
+
+file_log = logging.FileHandler('Log.log')
+console_out = logging.StreamHandler()
+
+logging.basicConfig(handlers=(file_log, console_out),
+                    format='[%(asctime)s | %(levelname)s]: %(message)s',
+                    datefmt='%m.%d.%Y %H:%M:%S',
+                    level=logging.DEBUG)
 
 bot = Snake(intents=Intents.DEFAULT, sync_interactions=True)
 
