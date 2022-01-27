@@ -1,10 +1,9 @@
 import configparser
 
 import requests
+from dis_snek import listen, Intents, ActivityType
 from dis_snek.client import Snake
 from dis_snek.models import Activity, slash_command, Embed, InteractionContext, slash_option, OptionTypes, SlashCommandChoice
-from dis_snek.models.enums import Intents, ActivityType
-from dis_snek.models.listener import listen
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding='utf-8')
