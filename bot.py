@@ -1,7 +1,7 @@
 import configparser
 import logging
 
-import requests
+import aiohttp
 from dis_snek import listen, Intents, ActivityType
 from dis_snek.client import Snake
 from dis_snek.models import Activity, slash_command, Embed, InteractionContext, slash_option, OptionTypes, SlashCommandChoice
@@ -75,12 +75,12 @@ async def status(ctx: InteractionContext, server: int = None):
     embed = Embed(title="Статус серверов World Of Tanks",
                   description="Все данные взяты из открытых источников, автор не несет ответственности за правильность данных.")
     embed.set_footer(text="При поддержке https://wgstatus.com/")
-    request = requests.get("https://api.wgstatus.com/api/data/wot")
-    results: list = request.json()["results"][0]
-    if request.status_code != 200:
-        embed.add_field(name="Ошибка API", value=f"Код ответа сервера: {request.status_code}")
+    try:
+        results: list = await get_wot_data()
+    except IncorrectResponse:
+        embed.add_field(name="Ошибка API", value="Сервер не смог ответить")
         return await ctx.send(embeds=embed, ephemeral=True)
-    elif server is None:
+    if server is None:
         embed.description += "\n\n⚠ Для более подробной информации об отдельном сервере укажите параметр `server` при выполнении команды"
         for i, item in enumerate(results):
             if i < 1 or i > 8:
@@ -102,6 +102,19 @@ async def status(ctx: InteractionContext, server: int = None):
         for server in servers:
             embed.add_field(name=server[0], value=server[1], inline=True)
     await ctx.send(embeds=embed, ephemeral=True)
+
+
+async def get_wot_data():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.wgstatus.com/api/data/wot") as response:
+            if response.status != 200:
+                raise IncorrectResponse
+            data = await response.json()
+            return data["results"][0]
+
+
+class IncorrectResponse(Exception):
+    pass
 
 
 bot.start(config["Config"]["token"])
