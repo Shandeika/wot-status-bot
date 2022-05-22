@@ -9,7 +9,7 @@ from dis_snek.models import Activity, slash_command, Embed, InteractionContext, 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding='utf-8')
 
-file_log = logging.FileHandler('Log.log')
+file_log = logging.FileHandler('Log.log', encoding='utf-8')
 console_out = logging.StreamHandler()
 
 logging.basicConfig(handlers=(file_log, console_out),
