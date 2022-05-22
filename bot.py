@@ -38,6 +38,8 @@ async def info(ctx: InteractionContext):
                     "Репозиторий: [GitHub](https://github.com/Shandeika/WOTStatusBot)\n"
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
+    embed.add_field(name=f"Количество серверов", value=len(ctx.bot.guilds), inline=False)
+    embed.add_field(name="Мониторинг бота", value="https://bots.server-discord.com/857360003512795167")
     await ctx.send(embeds=embed)
 
 
