@@ -2,9 +2,10 @@ import configparser
 import logging
 
 import aiohttp
-from dis_snek import listen, Intents, ActivityType
+from dis_snek import listen, Intents, ActivityType, Task, IntervalTrigger
 from dis_snek.client import Snake
-from dis_snek.models import Activity, slash_command, Embed, InteractionContext, slash_option, OptionTypes, SlashCommandChoice
+from dis_snek.models import Activity, slash_command, Embed, InteractionContext, slash_option, OptionTypes, \
+    SlashCommandChoice
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding='utf-8')
@@ -21,9 +22,10 @@ bot = Snake(intents=Intents.DEFAULT, sync_interactions=True)
 
 
 @listen()
-async def on_ready():
+async def on_startup():
     print(f"Авторизован под: {bot.user}")
     await bot.change_presence(activity=Activity(type=ActivityType.WATCHING, name="за серверами"))
+    push_monitoring_data.start()
 
 
 @slash_command(
@@ -116,5 +118,14 @@ async def get_wot_data():
 class IncorrectResponse(Exception):
     pass
 
+
+@Task.create(IntervalTrigger(minutes=1))
+async def push_monitoring_data():
+    async with aiohttp.ClientSession(headers={'Authorization': f'SDC {config["Config"]["sdc_token"]}'}) as session:
+        async with session.post(f"https://api.server-discord.com/v2/bots/{bot.user.id}/stats", data={'shards': 1, 'servers': len(bot.guilds)}) as response:
+            if response.status == 200:
+                logging.info(f"Monitoring push success. {response.status}, {len(bot.guilds)}")
+            else:
+                logging.error(f"Monitoring push failed. {response.status}, {len(bot.guilds)}")
 
 bot.start(config["Config"]["token"])
