@@ -41,7 +41,8 @@ async def info(ctx: InteractionContext):
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
     embed.add_field(name=f"Количество серверов", value=len(ctx.bot.guilds), inline=False)
-    embed.add_field(name="Мониторинг бота", value="https://bots.server-discord.com/857360003512795167")
+    embed.add_field(name="Мониторинг бота", value="https://bots.server-discord.com/857360003512795167\nhttps://top.gg/bot/857360003512795167")
+    embed.set_image("https://top.gg/api/widget/857360003512795167.svg")
     await ctx.send(embeds=embed)
 
 
