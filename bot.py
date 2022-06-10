@@ -130,7 +130,7 @@ async def push_monitoring_data():
                 logging.error(f"Monitoring SDC push failed. {response.status}, {len(bot.guilds)}")
     # top.gg monitoring
     async with aiohttp.ClientSession(headers={'Authorization': {config["Config"]["top_gg_token"]}}) as session:
-        async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats", data={"server_count": len(bot.guilds)}) as response:
+        async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats", data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
             if response.status == 200:
                 logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
             else:
