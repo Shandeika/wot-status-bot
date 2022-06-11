@@ -42,7 +42,7 @@ async def info(ctx: InteractionContext):
                     "Источник данных: https://wgstatus.com")
     embed.add_field(name=f"Количество серверов", value=len(ctx.bot.guilds), inline=False)
     embed.add_field(name="Мониторинг бота", value="https://bots.server-discord.com/857360003512795167\nhttps://top.gg/bot/857360003512795167")
-    embed.set_image("https://top.gg/api/widget/857360003512795167.svg")
+    embed.set_image("https://top.gg/api/widget/857360003512795167.svg")  # this doesnt work?
     await ctx.send(embeds=embed)
 
 
@@ -90,7 +90,7 @@ async def status(ctx: InteractionContext, server: int = None):
                 continue
             data: dict = results[i].get('data')
             title = f"{data.get('title')} {':flag_' + data.get('flag') + ':' if data.get('flag') is not None else ''}\n"  # Название сервера и его флаг
-            description = f"Версия: **{data.get('version')}**\nПоследнее обновление:\n<t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online')}`"  # Данные о онлайне и версии
+            description = f"Версия: **{data.get('version')}**\nПоследнее обновление:\n<t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online') if data.get('online') is not None else 'Недоступно'}`"  # Данные о онлайне и версии
             embed.add_field(name=title, value=description, inline=True)
     elif isinstance(server, int):
         data: dict = results[server].get('data')
@@ -124,17 +124,20 @@ class IncorrectResponse(Exception):
 async def push_monitoring_data():
     # SDC monitoring
     async with aiohttp.ClientSession(headers={'Authorization': f'SDC {config["Config"]["sdc_token"]}'}) as session:
-        async with session.post(f"https://api.server-discord.com/v2/bots/{bot.user.id}/stats", data={'shards': 1, 'servers': len(bot.guilds)}) as response:
+        async with session.post(f"https://api.server-discord.com/v2/bots/{bot.user.id}/stats",
+                                data={'shards': 1, 'servers': len(bot.guilds)}) as response:
             if response.status == 200:
                 logging.info(f"Monitoring SDC push success. {response.status}, {len(bot.guilds)}")
             else:
                 logging.error(f"Monitoring SDC push failed. {response.status}, {len(bot.guilds)}")
     # top.gg monitoring
     async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["top_gg_token"]}) as session:
-        async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats", data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
+        async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats",
+                                data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
             if response.status == 200:
                 logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
             else:
                 logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
+
 
 bot.start(config["Config"]["token"])
