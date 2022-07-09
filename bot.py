@@ -33,6 +33,8 @@ async def on_startup():
     description="Информация о боте"
 )
 async def info(ctx: InteractionContext):
+    await send_analytics(user_id=ctx.author.id,
+                         action_name=ctx.invoke_target)
     embed = Embed(
         title="World Of Tanks Status",
         description="Бот создан для отображения статуса серверов WOT\n"
@@ -67,6 +69,8 @@ async def info(ctx: InteractionContext):
     ]
 )
 async def status(ctx: InteractionContext, server: int = None):
+    await send_analytics(user_id=ctx.author.id,
+                         action_name=f"{ctx.invoke_target}_{server if server else 'all'}")
     status_emoji = {
         "online": "<:online:741779665026547813>",
         "offline": "<:offline:741779665017897047>"
@@ -114,6 +118,27 @@ async def get_wot_data():
                 raise IncorrectResponse
             data = await response.json()
             return data["results"][0]
+
+
+async def send_analytics(user_id, action_name):
+    """
+    Send record to Google Analytics
+    """
+    params = {
+        'client_id': str(user_id),
+        'user_id': str(user_id),
+        'events': [{
+            'name': action_name,
+            'params': {
+                'engagement_time_msec': '1',
+            }
+        }],
+    }
+    async with aiohttp.ClientSession() as session:
+        await session.post(
+                f'https://www.google-analytics.com/'
+                f'mp/collect?measurement_id={config["Config"]["google_gcode"]}&api_secret={config["Config"]["google_secret_key"]}',
+                json=params)
 
 
 class IncorrectResponse(Exception):
