@@ -1,11 +1,13 @@
 import configparser
 import logging
+from datetime import datetime
 
 import aiohttp
-from dis_snek import listen, Intents, ActivityType, Task, IntervalTrigger
+from dis_snek import listen, Intents, ActivityType, Task, IntervalTrigger, ShortText, ParagraphText, ModalContext, \
+    EmbedAuthor, EmbedFooter
 from dis_snek.client import Snake
 from dis_snek.models import Activity, slash_command, Embed, InteractionContext, slash_option, OptionTypes, \
-    SlashCommandChoice
+    SlashCommandChoice, Modal, Webhook
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding='utf-8')
@@ -109,6 +111,31 @@ async def status(ctx: InteractionContext, server: int = None):
         for server in servers:
             embed.add_field(name=server[0], value=server[1], inline=True)
     await ctx.send(embeds=embed, ephemeral=True)
+
+
+@slash_command(
+    name="feedback",
+    description="Отправить отзыв/предложение для разработчика"
+)
+async def feedback(ctx: InteractionContext):
+    await send_analytics(user_id=ctx.author.id,
+                         action_name=ctx.invoke_target)
+    modal = Modal(
+        title="Отправить отзыв/предложение для разработчика",
+        components=[
+            ShortText(label="Тема", custom_id="theme", required=True, placeholder="Тема отзыва/предложения"),
+            ParagraphText(label="Отзыв/предложение", custom_id="feedback", required=True,
+                          placeholder="Текст отзыва/предложения"),
+        ]
+    )
+    await ctx.send_modal(modal=modal)
+    modal_ctx: ModalContext = await ctx.bot.wait_for_modal(modal)
+    await modal_ctx.send(embed=Embed(title="Отправлено", description="Спасибо за ваше предложение/отзыв!"),
+                         ephemeral=True)
+    await Webhook.from_url(config["Config"]["feedback_webhook_url"], bot).send(
+        embed=Embed(title=modal_ctx.responses.get("theme"), description=modal_ctx.responses.get("feedback"),
+                    author=EmbedAuthor(name=ctx.author.username, icon_url=ctx.author.avatar.url), timestamp=datetime.now(),
+                    footer=EmbedFooter(text=f"USER_ID={ctx.author.id} GUILD_ID={ctx.guild.id} GUILD_NAME={ctx.guild.name}")))
 
 
 async def get_wot_data():
