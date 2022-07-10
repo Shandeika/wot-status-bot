@@ -45,7 +45,8 @@ async def info(ctx: InteractionContext):
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
     embed.add_field(name=f"Количество серверов", value=len(ctx.bot.guilds), inline=False)
-    embed.add_field(name="Мониторинг бота", value="https://bots.server-discord.com/857360003512795167\nhttps://top.gg/bot/857360003512795167")
+    embed.add_field(name="Мониторинг бота",
+                    value="https://bots.server-discord.com/857360003512795167\nhttps://top.gg/bot/857360003512795167")
     embed.set_image("https://top.gg/api/widget/857360003512795167.svg")  # this doesnt work?
     await ctx.send(embeds=embed)
 
@@ -163,9 +164,9 @@ async def send_analytics(user_id, action_name):
     }
     async with aiohttp.ClientSession() as session:
         await session.post(
-                f'https://www.google-analytics.com/'
-                f'mp/collect?measurement_id={config["Config"]["google_gcode"]}&api_secret={config["Config"]["google_secret_key"]}',
-                json=params)
+            f'https://www.google-analytics.com/'
+            f'mp/collect?measurement_id={config["Config"]["google_gcode"]}&api_secret={config["Config"]["google_secret_key"]}',
+            json=params)
 
 
 class IncorrectResponse(Exception):
