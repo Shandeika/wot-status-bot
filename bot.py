@@ -18,7 +18,7 @@ console_out = logging.StreamHandler()
 logging.basicConfig(handlers=(file_log, console_out),
                     format='[%(asctime)s | %(levelname)s]: %(message)s',
                     datefmt='%m.%d.%Y %H:%M:%S',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 bot = Snake(intents=Intents.DEFAULT, sync_interactions=True)
 
