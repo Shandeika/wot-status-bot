@@ -191,6 +191,14 @@ async def push_monitoring_data():
                 logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
             else:
                 logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
+    # boticord monitoring
+    async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["boticord_token"], "Content-Type": "application/json"}) as session:
+        async with session.post(f"https://api.boticord.top/v1/stats",
+                                json={"servers": len(bot.guilds)}) as response:
+            if response.status == 200:
+                logging.info(f"Monitoring boticord push success. {response.status}, {len(bot.guilds)}")
+            else:
+                logging.error(f"Monitoring boticord push failed. {response.status}, {len(bot.guilds)}")
 
 
 bot.start(config["Config"]["token"])
