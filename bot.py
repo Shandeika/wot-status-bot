@@ -49,7 +49,6 @@ async def info(ctx: InteractionContext):
                     value="https://bots.server-discord.com/857360003512795167\n"
                           "https://top.gg/bot/857360003512795167\n"
                           "https://boticord.top/bot/857360003512795167\n")
-    embed.set_image("https://top.gg/api/widget/857360003512795167.svg")  # this doesnt work?
     await ctx.send(embeds=embed)
 
 
