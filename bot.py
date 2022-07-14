@@ -41,12 +41,14 @@ async def info(ctx: InteractionContext):
         title="World Of Tanks Status",
         description="Бот создан для отображения статуса серверов WOT\n"
                     "Автор: [Shandy](https://github.com/Shandeika)\n"
-                    "Репозиторий: [GitHub](https://github.com/Shandeika/WOTStatusBot)\n"
+                    "Репозиторий: [GitHub](https://github.com/Shandeika/wot-status-bot)\n"
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
     embed.add_field(name=f"Количество серверов", value=len(ctx.bot.guilds), inline=False)
     embed.add_field(name="Мониторинг бота",
-                    value="https://bots.server-discord.com/857360003512795167\nhttps://top.gg/bot/857360003512795167")
+                    value="https://bots.server-discord.com/857360003512795167\n"
+                          "https://top.gg/bot/857360003512795167\n"
+                          "https://boticord.top/bot/857360003512795167\n")
     embed.set_image("https://top.gg/api/widget/857360003512795167.svg")  # this doesnt work?
     await ctx.send(embeds=embed)
 
