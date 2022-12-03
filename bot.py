@@ -176,7 +176,7 @@ class IncorrectResponse(Exception):
     pass
 
 
-@Task.create(IntervalTrigger(minutes=1))
+@Task.create(IntervalTrigger(minutes=5))
 async def push_monitoring_data():
     if config["Config"]["sdc_token"]:
         # SDC monitoring
