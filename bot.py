@@ -176,32 +176,35 @@ class IncorrectResponse(Exception):
     pass
 
 
-@Task.create(IntervalTrigger(minutes=1))
+@Task.create(IntervalTrigger(minutes=5))
 async def push_monitoring_data():
-    # SDC monitoring
-    async with aiohttp.ClientSession(headers={'Authorization': f'SDC {config["Config"]["sdc_token"]}'}) as session:
-        async with session.post(f"https://api.server-discord.com/v2/bots/{bot.user.id}/stats",
-                                data={'shards': 1, 'servers': len(bot.guilds)}) as response:
-            if response.status == 200:
-                logging.info(f"Monitoring SDC push success. {response.status}, {len(bot.guilds)}")
-            else:
-                logging.error(f"Monitoring SDC push failed. {response.status}, {len(bot.guilds)}")
-    # top.gg monitoring
-    async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["top_gg_token"]}) as session:
-        async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats",
-                                data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
-            if response.status == 200:
-                logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
-            else:
-                logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
-    # boticord monitoring
-    async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["boticord_token"], "Content-Type": "application/json"}) as session:
-        async with session.post(f"https://api.boticord.top/v1/stats",
-                                json={"servers": len(bot.guilds)}) as response:
-            if response.status == 200:
-                logging.info(f"Monitoring boticord push success. {response.status}, {len(bot.guilds)}")
-            else:
-                logging.error(f"Monitoring boticord push failed. {response.status}, {len(bot.guilds)}")
+    if config["Config"]["sdc_token"]:
+        # SDC monitoring
+        async with aiohttp.ClientSession(headers={'Authorization': f'SDC {config["Config"]["sdc_token"]}'}) as session:
+            async with session.post(f"https://api.server-discord.com/v2/bots/{bot.user.id}/stats",
+                                    data={'shards': 1, 'servers': len(bot.guilds)}) as response:
+                if response.status == 200:
+                    logging.info(f"Monitoring SDC push success. {response.status}, {len(bot.guilds)}")
+                else:
+                    logging.error(f"Monitoring SDC push failed. {response.status}, {len(bot.guilds)}")
+    elif config["Config"]["top_gg_token"]:
+        # top.gg monitoring
+        async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["top_gg_token"]}) as session:
+            async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats",
+                                    data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
+                if response.status == 200:
+                    logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
+                else:
+                    logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
+    elif config["Config"]["boticord_token"]:
+        # boticord monitoring
+        async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["boticord_token"], "Content-Type": "application/json"}) as session:
+            async with session.post(f"https://api.boticord.top/v1/stats",
+                                    json={"servers": len(bot.guilds)}) as response:
+                if response.status == 200:
+                    logging.info(f"Monitoring boticord push success. {response.status}, {len(bot.guilds)}")
+                else:
+                    logging.error(f"Monitoring boticord push failed. {response.status}, {len(bot.guilds)}")
 
 
 bot.start(config["Config"]["token"])
