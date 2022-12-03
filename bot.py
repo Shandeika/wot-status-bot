@@ -62,14 +62,16 @@ async def info(ctx: InteractionContext):
     required=False,
     opt_type=OptionTypes.INTEGER,
     choices=[
-        SlashCommandChoice(name="WoT RU", value=1),
-        SlashCommandChoice(name="WoT Common Test", value=2),
-        SlashCommandChoice(name="WoT Sandbox", value=3),
-        SlashCommandChoice(name="WoT EU", value=4),
+        SlashCommandChoice(name="WoT RUBY", value=1),
+        SlashCommandChoice(name="WoT EU", value=2),
+        SlashCommandChoice(name="WoT RUBY Public Test", value=3),
+        SlashCommandChoice(name="WoT Common Test Global", value=4),
         SlashCommandChoice(name="WoT NA(USA)", value=5),
         SlashCommandChoice(name="WoT ASIA", value=6),
         SlashCommandChoice(name="WOT360 CN", value=7),
-        SlashCommandChoice(name="WoT ST", value=8)
+        SlashCommandChoice(name="WoT Sandbox", value=8),
+        SlashCommandChoice(name="WoT ST RUBY", value=9),
+        SlashCommandChoice(name="WoT ST", value=10),
     ]
 )
 async def status(ctx: InteractionContext, server: int = None):
