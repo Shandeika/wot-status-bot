@@ -96,7 +96,7 @@ async def status(ctx: InteractionContext, server: int = None):
     if server is None:
         embed.description += "\n\n⚠ Для более подробной информации об отдельном сервере укажите параметр `server` при выполнении команды"
         for i, item in enumerate(results):
-            if i < 1 or i > 8:
+            if i < 1 or i > 10:
                 continue
             data: dict = results[i].get('data')
             title = f"{data.get('title')} {':flag_' + data.get('flag') + ':' if data.get('flag') is not None else ''}\n"  # Название сервера и его флаг
@@ -176,7 +176,7 @@ class IncorrectResponse(Exception):
     pass
 
 
-@Task.create(IntervalTrigger(minutes=5))
+@Task.create(IntervalTrigger(minutes=1))
 async def push_monitoring_data():
     if config["Config"]["sdc_token"]:
         # SDC monitoring
