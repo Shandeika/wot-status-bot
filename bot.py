@@ -107,7 +107,7 @@ async def status(ctx: discord.Interaction, server: int = None):
         data: dict = results[server].get('data')
         title = f"{data.get('title')} {':flag_' + data.get('flag') + ':' if data.get('flag') is not None else ''}"
         embed.add_field(name=title,
-                        value=f"Версия: **{data.get('version')}**\nПоследнее обновление: <t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online')}`")
+                        value=f"Версия: **{data.get('version')}**\nПоследнее обновление: <t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online')}`", inline=False)
         servers = list()
         for server in data.get('servers'):
             server_title = f"Название: `{server.get('name')}`"
@@ -150,13 +150,13 @@ async def feedback(ctx: discord.Interaction):
             feedback_embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
             user_embed = discord.Embed(title="Отправлено", description="Спасибо за ваше предложение/отзыв!")
             await interaction.response.send_message(embed=user_embed, ephemeral=True)
-            with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession() as session:
                 webhook = discord.Webhook.from_url(config["Config"]["feedback_webhook_url"], session=session)
                 await webhook.send(embed=feedback_embed)
 
     modal = Feedback()
 
-    await ctx.response.send_modal(modal=modal)
+    await ctx.response.send_modal(modal)
 
 
 async def get_wot_data():
