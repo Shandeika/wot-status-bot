@@ -3,11 +3,8 @@ import logging
 from datetime import datetime
 
 import aiohttp
-from dis_snek import listen, Intents, ActivityType, Task, IntervalTrigger, ShortText, ParagraphText, ModalContext, \
-    EmbedAuthor, EmbedFooter
-from dis_snek.client import Snake
-from dis_snek.models import Activity, slash_command, Embed, InteractionContext, slash_option, OptionTypes, \
-    SlashCommandChoice, Modal, Webhook
+import discord
+from discord.ext import commands, tasks
 
 config = configparser.ConfigParser()
 config.read("config.ini", encoding='utf-8')
@@ -20,61 +17,65 @@ logging.basicConfig(handlers=(file_log, console_out),
                     datefmt='%m.%d.%Y %H:%M:%S',
                     level=logging.INFO)
 
-bot = Snake(intents=Intents.DEFAULT, sync_interactions=True)
+bot = commands.Bot(command_prefix="wotsb.", intents=discord.Intents.default())
 
 
-@listen()
-async def on_startup():
-    print(f"Авторизован под: {bot.user}")
-    await bot.change_presence(activity=Activity(type=ActivityType.WATCHING, name="за серверами"))
+@bot.event
+async def on_ready():
+    logging.info(f"Авторизован под: {bot.user}")
+    watching = discord.Activity(
+        name="за серверами",
+        type=discord.ActivityType.watching,
+        timestamps={"start": datetime.now()}
+    )
+    await bot.change_presence(activity=watching)
     push_monitoring_data.start()
 
 
-@slash_command(
+@bot.tree.command(
     name="info",
     description="Информация о боте"
 )
-async def info(ctx: InteractionContext):
-    await send_analytics(user_id=ctx.author.id,
-                         action_name=ctx.invoke_target)
-    embed = Embed(
+async def info(ctx: discord.Interaction):
+    await send_analytics(user_id=ctx.user.id,
+                         action_name=ctx.command.name)
+    embed = discord.Embed(
         title="World Of Tanks Status",
         description="Бот создан для отображения статуса серверов WOT\n"
                     "Автор: [Shandy](https://github.com/Shandeika)\n"
                     "Репозиторий: [GitHub](https://github.com/Shandeika/wot-status-bot)\n"
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
-    embed.add_field(name=f"Количество серверов", value=len(ctx.bot.guilds), inline=False)
+    embed.add_field(name=f"Количество серверов", value=len(ctx.client.guilds), inline=False)
     embed.add_field(name="Мониторинг бота",
                     value="https://bots.server-discord.com/857360003512795167\n"
                           "https://top.gg/bot/857360003512795167\n"
                           "https://boticord.top/bot/857360003512795167\n")
-    await ctx.send(embeds=embed)
+    await ctx.response.send_message(embeds=embed)
 
 
-@slash_command(
+@bot.tree.command(
     name="status",
     description="Статус серверов World of Tanks"
 )
-@slash_option(
-    name="server",
-    description="Сервер, о котором нужно получить информацию",
-    required=False,
-    opt_type=OptionTypes.INTEGER,
-    choices=[
-        SlashCommandChoice(name="WoT RU", value=1),
-        SlashCommandChoice(name="WoT Common Test", value=2),
-        SlashCommandChoice(name="WoT Sandbox", value=3),
-        SlashCommandChoice(name="WoT EU", value=4),
-        SlashCommandChoice(name="WoT NA(USA)", value=5),
-        SlashCommandChoice(name="WoT ASIA", value=6),
-        SlashCommandChoice(name="WOT360 CN", value=7),
-        SlashCommandChoice(name="WoT ST", value=8)
+@discord.app_commands.choices(
+    server=[
+        discord.app_commands.Choice(name="WoT RU", value=1),
+        discord.app_commands.Choice(name="WoT Common Test", value=2),
+        discord.app_commands.Choice(name="WoT Sandbox", value=3),
+        discord.app_commands.Choice(name="WoT EU", value=4),
+        discord.app_commands.Choice(name="WoT NA(USA)", value=5),
+        discord.app_commands.Choice(name="WoT ASIA", value=6),
+        discord.app_commands.Choice(name="WOT360 CN", value=7),
+        discord.app_commands.Choice(name="WoT ST", value=8)
     ]
 )
-async def status(ctx: InteractionContext, server: int = None):
-    await send_analytics(user_id=ctx.author.id,
-                         action_name=f"{ctx.invoke_target}_{server if server else 'all'}")
+@discord.app_commands.describe(
+    server='Сервер, о котором нужно получить информацию'
+)
+async def status(ctx: discord.Interaction, server: int = None):
+    await send_analytics(user_id=ctx.user.id,
+                         action_name=f"{ctx.command.name}_{server if server else 'all'}")
     status_emoji = {
         "online": "<:online:741779665026547813>",
         "offline": "<:offline:741779665017897047>"
@@ -83,16 +84,18 @@ async def status(ctx: InteractionContext, server: int = None):
         "online": "Онлайн",
         "offline": "Выключен"
     }
-    embed = Embed(title="Статус серверов World Of Tanks",
-                  description="Все данные взяты из открытых источников, автор не несет ответственности за правильность данных.")
+    embed = discord.Embed(title="Статус серверов World Of Tanks",
+                          description="Все данные взяты из открытых источников, автор не несет ответственности за "
+                                      "правильность данных.")
     embed.set_footer(text="При поддержке https://wgstatus.com/")
     try:
         results: list = await get_wot_data()
     except IncorrectResponse:
         embed.add_field(name="Ошибка API", value="Сервер не смог ответить")
-        return await ctx.send(embeds=embed, ephemeral=True)
+        return await ctx.response.send_message(embeds=embed, ephemeral=True)
     if server is None:
-        embed.description += "\n\n⚠ Для более подробной информации об отдельном сервере укажите параметр `server` при выполнении команды"
+        embed.description += "\n\n⚠ Для более подробной информации об отдельном сервере укажите параметр `server` при " \
+                             "выполнении команды"
         for i, item in enumerate(results):
             if i < 1 or i > 8:
                 continue
@@ -108,36 +111,52 @@ async def status(ctx: InteractionContext, server: int = None):
         servers = list()
         for server in data.get('servers'):
             server_title = f"Название: `{server.get('name')}`"
-            server_online = f"{status_emoji.get(server.get('status'))} Онлайн: `{server.get('online')}`" if server.get('online') is not None else f"{status_emoji.get(server.get('status'))} {status_word.get(server.get('status'))}"
+            server_online = f"{status_emoji.get(server.get('status'))} Онлайн: `{server.get('online')}`" if server.get(
+                'online') is not None else f"{status_emoji.get(server.get('status'))} {status_word.get(server.get('status'))}"
             servers.append([server_title, server_online])
         for server in servers:
             embed.add_field(name=server[0], value=server[1], inline=True)
-    await ctx.send(embeds=embed, ephemeral=True)
+    await ctx.response.send_message(embeds=embed, ephemeral=True)
 
 
-@slash_command(
+@bot.tree.command(
     name="feedback",
     description="Отправить отзыв/предложение для разработчика"
 )
-async def feedback(ctx: InteractionContext):
-    await send_analytics(user_id=ctx.author.id,
-                         action_name=ctx.invoke_target)
-    modal = Modal(
-        title="Отправить отзыв/предложение для разработчика",
-        components=[
-            ShortText(label="Тема", custom_id="theme", required=True, placeholder="Тема отзыва/предложения"),
-            ParagraphText(label="Отзыв/предложение", custom_id="feedback", required=True,
-                          placeholder="Текст отзыва/предложения"),
-        ]
-    )
-    await ctx.send_modal(modal=modal)
-    modal_ctx: ModalContext = await ctx.bot.wait_for_modal(modal)
-    await modal_ctx.send(embed=Embed(title="Отправлено", description="Спасибо за ваше предложение/отзыв!"),
-                         ephemeral=True)
-    await Webhook.from_url(config["Config"]["feedback_webhook_url"], bot).send(
-        embed=Embed(title=modal_ctx.responses.get("theme"), description=modal_ctx.responses.get("feedback"),
-                    author=EmbedAuthor(name=ctx.author.username, icon_url=ctx.author.avatar.url), timestamp=datetime.now(),
-                    footer=EmbedFooter(text=f"USER_ID={ctx.author.id} GUILD_ID={ctx.guild.id} GUILD_NAME={ctx.guild.name}")))
+async def feedback(ctx: discord.Interaction):
+    await send_analytics(user_id=ctx.user.id,
+                         action_name=ctx.command.name)
+
+    class Feedback(discord.ui.Modal, title="Отправить отзыв/предложение для разработчика"):
+        theme = discord.ui.TextInput(
+            label="Тема",
+            style=discord.TextStyle.short,
+            required=True,
+            placeholder="Тема отзыва/предложения",
+            custom_id="theme"
+        )
+        feedback = discord.ui.TextInput(
+            label="Отзыв/предложение",
+            style=discord.TextStyle.long,
+            required=True,
+            placeholder="Текст отзыва/предложения",
+            custom_id="feedback"
+        )
+
+        async def on_submit(self, interaction: discord.Interaction, /) -> None:
+            feedback_embed = discord.Embed(title=self.theme, description=self.feedback, timestamp=datetime.now(), )
+            feedback_embed.set_footer(
+                text=f"USER_ID={interaction.user.id} GUILD_ID={interaction.guild.id} GUILD_NAME={interaction.guild.name}")
+            feedback_embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
+            user_embed = discord.Embed(title="Отправлено", description="Спасибо за ваше предложение/отзыв!")
+            await interaction.response.send_message(embed=user_embed, ephemeral=True)
+            with aiohttp.ClientSession() as session:
+                webhook = discord.Webhook.from_url(config["Config"]["feedback_webhook_url"], session=session)
+                await webhook.send(embed=feedback_embed)
+
+    modal = Feedback()
+
+    await ctx.response.send_modal(modal=modal)
 
 
 async def get_wot_data():
@@ -174,7 +193,7 @@ class IncorrectResponse(Exception):
     pass
 
 
-@Task.create(IntervalTrigger(minutes=1))
+@tasks.loop(minutes=5)
 async def push_monitoring_data():
     # SDC monitoring
     async with aiohttp.ClientSession(headers={'Authorization': f'SDC {config["Config"]["sdc_token"]}'}) as session:
@@ -193,7 +212,8 @@ async def push_monitoring_data():
             else:
                 logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
     # boticord monitoring
-    async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["boticord_token"], "Content-Type": "application/json"}) as session:
+    async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["boticord_token"],
+                                              "Content-Type": "application/json"}) as session:
         async with session.post(f"https://api.boticord.top/v1/stats",
                                 json={"servers": len(bot.guilds)}) as response:
             if response.status == 200:
