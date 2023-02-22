@@ -51,7 +51,7 @@ async def info(ctx: discord.Interaction):
                     value="https://bots.server-discord.com/857360003512795167\n"
                           "https://top.gg/bot/857360003512795167\n"
                           "https://boticord.top/bot/857360003512795167\n")
-    await ctx.response.send_message(embeds=embed)
+    await ctx.response.send_message(embed=embed)
 
 
 @bot.tree.command(
@@ -92,7 +92,7 @@ async def status(ctx: discord.Interaction, server: int = None):
         results: list = await get_wot_data()
     except IncorrectResponse:
         embed.add_field(name="Ошибка API", value="Сервер не смог ответить")
-        return await ctx.response.send_message(embeds=embed, ephemeral=True)
+        return await ctx.response.send_message(embed=embed, ephemeral=True)
     if server is None:
         embed.description += "\n\n⚠ Для более подробной информации об отдельном сервере укажите параметр `server` при " \
                              "выполнении команды"
@@ -116,7 +116,7 @@ async def status(ctx: discord.Interaction, server: int = None):
             servers.append([server_title, server_online])
         for server in servers:
             embed.add_field(name=server[0], value=server[1], inline=True)
-    await ctx.response.send_message(embeds=embed, ephemeral=True)
+    await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
 @bot.tree.command(
@@ -222,4 +222,4 @@ async def push_monitoring_data():
                 logging.error(f"Monitoring boticord push failed. {response.status}, {len(bot.guilds)}")
 
 
-bot.start(config["Config"]["token"])
+bot.run(config["Config"]["token"])
