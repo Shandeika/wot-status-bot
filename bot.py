@@ -20,7 +20,7 @@ GOOGLE_SECRET_KEY: str = os.environ.get("GOOGLE_SECRET_KEY")
 TOPGG_TOKEN: str = os.environ.get("TOPGG_TOKEN")
 FEEDBACK_WEBHOOK_URL: str = os.environ.get("FEEDBACK_WEBHOOK_URL")
 
-file_log = logging.FileHandler('Log.log', encoding='utf-8')
+file_log = logging.FileHandler('debug.log', encoding='utf-8')
 console_out = logging.StreamHandler()
 
 logging.basicConfig(handlers=(file_log, console_out),
