@@ -16,9 +16,7 @@
 - Статус отдельных серверов
 
 ## Мониторинги
-- [SDC](https://bots.server-discord.com/857360003512795167)
 - [top.gg](https://top.gg/bot/857360003512795167)
-- [BotiCord](https://boticord.top/bot/857360003512795167)
 
 ## Благодарности
 * [wgstatus.com](https://wgstatus.com/wot) предоставляет все данные о серверах ([API](https://api.wgstatus.com/api/data/wot))
