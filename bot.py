@@ -1,13 +1,24 @@
-import configparser
 import logging
+import os
+import shutil
 from datetime import datetime
 
 import aiohttp
 import discord
 from discord.ext import commands, tasks
+from dotenv import load_dotenv
 
-config = configparser.ConfigParser()
-config.read("config.ini", encoding='utf-8')
+if not os.path.exists(".env"):
+    shutil.copy(".env.example", ".env")
+    exit(1)
+
+load_dotenv()
+
+TOKEN: str = os.environ.get("DISCORD_TOKEN")
+GOOGLE_GCODE: str = os.environ.get("GOOGLE_GCODE")
+GOOGLE_SECRET_KEY: str = os.environ.get("GOOGLE_SECRET_KEY")
+TOPGG_TOKEN: str = os.environ.get("TOPGG_TOKEN")
+FEEDBACK_WEBHOOK_URL: str = os.environ.get("FEEDBACK_WEBHOOK_URL")
 
 file_log = logging.FileHandler('Log.log', encoding='utf-8')
 console_out = logging.StreamHandler()
@@ -107,7 +118,8 @@ async def status(ctx: discord.Interaction, server: int = None):
         data: dict = results[server].get('data')
         title = f"{data.get('title')} {':flag_' + data.get('flag') + ':' if data.get('flag') is not None else ''}"
         embed.add_field(name=title,
-                        value=f"Версия: **{data.get('version')}**\nПоследнее обновление: <t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online')}`", inline=False)
+                        value=f"Версия: **{data.get('version')}**\nПоследнее обновление: <t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online')}`",
+                        inline=False)
         servers = list()
         for server in data.get('servers'):
             server_title = f"Название: `{server.get('name')}`"
@@ -151,7 +163,7 @@ async def feedback(ctx: discord.Interaction):
             user_embed = discord.Embed(title="Отправлено", description="Спасибо за ваше предложение/отзыв!")
             await interaction.response.send_message(embed=user_embed, ephemeral=True)
             async with aiohttp.ClientSession() as session:
-                webhook = discord.Webhook.from_url(config["Config"]["feedback_webhook_url"], session=session)
+                webhook = discord.Webhook.from_url(FEEDBACK_WEBHOOK_URL, session=session)
                 await webhook.send(embed=feedback_embed)
 
     modal = Feedback()
@@ -185,7 +197,7 @@ async def send_analytics(user_id, action_name):
     async with aiohttp.ClientSession() as session:
         await session.post(
             f'https://www.google-analytics.com/'
-            f'mp/collect?measurement_id={config["Config"]["google_gcode"]}&api_secret={config["Config"]["google_secret_key"]}',
+            f'mp/collect?measurement_id={GOOGLE_GCODE}&api_secret={GOOGLE_SECRET_KEY}',
             json=params)
 
 
@@ -196,7 +208,7 @@ class IncorrectResponse(Exception):
 @tasks.loop(minutes=5)
 async def push_monitoring_data():
     # top.gg monitoring
-    async with aiohttp.ClientSession(headers={'Authorization': config["Config"]["top_gg_token"]}) as session:
+    async with aiohttp.ClientSession(headers={'Authorization': TOPGG_TOKEN}) as session:
         async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats",
                                 data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
             if response.status == 200:
@@ -205,4 +217,4 @@ async def push_monitoring_data():
                 logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
 
 
-bot.run(config["Config"]["token"])
+bot.run(TOKEN)
