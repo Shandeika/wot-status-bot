@@ -52,16 +52,14 @@ async def info(ctx: discord.Interaction):
                          action_name=ctx.command.name)
     embed = discord.Embed(
         title="World Of Tanks Status",
-        description="Бот создан для отображения статуса серверов WOT\n"
+        description="Бот для отображения статуса серверов WOT\n"
                     "Автор: [Shandy](https://github.com/Shandeika)\n"
                     "Репозиторий: [GitHub](https://github.com/Shandeika/wot-status-bot)\n"
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
     embed.add_field(name=f"Количество серверов", value=len(ctx.client.guilds), inline=False)
     embed.add_field(name="Мониторинг бота",
-                    value="https://bots.server-discord.com/857360003512795167\n"
-                          "https://top.gg/bot/857360003512795167\n"
-                          "https://boticord.top/bot/857360003512795167\n")
+                    value="https://top.gg/bot/857360003512795167")
     await ctx.response.send_message(embed=embed)
 
 
