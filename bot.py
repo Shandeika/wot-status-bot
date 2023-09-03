@@ -206,13 +206,14 @@ class IncorrectResponse(Exception):
 @tasks.loop(minutes=5)
 async def push_monitoring_data():
     # top.gg monitoring
-    async with aiohttp.ClientSession(headers={'Authorization': TOPGG_TOKEN}) as session:
-        async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats",
-                                data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
-            if response.status == 200:
-                logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
-            else:
-                logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
+    if TOPGG_TOKEN:
+        async with aiohttp.ClientSession(headers={'Authorization': TOPGG_TOKEN}) as session:
+            async with session.post(f"https://top.gg/api/bots/{bot.user.id}/stats",
+                                    data={"server_count": len(bot.guilds), "shard_count": 1}) as response:
+                if response.status == 200:
+                    logging.info(f"Monitoring top.gg push success. {response.status}, {len(bot.guilds)}")
+                else:
+                    logging.error(f"Monitoring top.gg push failed. {response.status}, {len(bot.guilds)}")
 
 
 bot.run(TOKEN)
