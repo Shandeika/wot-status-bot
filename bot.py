@@ -83,8 +83,7 @@ async def info(ctx: discord.Interaction):
     server='Сервер, о котором нужно получить информацию'
 )
 async def status(ctx: discord.Interaction, server: int = None):
-    await send_analytics(user_id=ctx.user.id,
-                         action_name=f"{ctx.command.name}_{server if server else 'all'}")
+    await send_analytics(user_id=ctx.user.id, action_name=f"{ctx.command.name}_{server if server else 'all'}")
     status_emoji = {
         "online": "<:online:741779665026547813>",
         "offline": "<:offline:741779665017897047>"
@@ -97,32 +96,57 @@ async def status(ctx: discord.Interaction, server: int = None):
                           description="Все данные взяты из открытых источников, автор не несет ответственности за "
                                       "правильность данных.")
     embed.set_footer(text="При поддержке https://wgstatus.com/")
+
     try:
-        results: list = await get_wot_data()
-    except IncorrectResponse:
+        url = "https://api.wgstatus.com/api/data/wot"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                data = await response.json()
+                if "results" in data:
+                    wot_data = data["results"][0]
+                else:
+                    embed.add_field(name="Ошибка API", value="Неверный ответ API")
+                    logging.error("Invalid API response: 'results' key not found.")
+                    return await ctx.response.send_message(embed=embed, ephemeral=True)
+    except aiohttp.ClientError as e:
         embed.add_field(name="Ошибка API", value="Сервер не смог ответить")
+        logging.exception(e)
         return await ctx.response.send_message(embed=embed, ephemeral=True)
+    except (ValueError, KeyError) as e:
+        embed.add_field(name="Ошибка API", value=f"Неверный ответ API")
+        logging.exception(e)
+        return await ctx.response.send_message(embed=embed, ephemeral=True)
+
     if server is None:
         embed.description += "\n\n⚠ Для более подробной информации об отдельном сервере укажите параметр `server` при " \
                              "выполнении команды"
-        for i, item in enumerate(results):
-            if i < 1 or i > 8:
-                continue
-            data: dict = results[i].get('data')
-            title = f"{data.get('title')} {':flag_' + data.get('flag') + ':' if data.get('flag') is not None else ''}\n"  # Название сервера и его флаг
-            description = f"Версия: **{data.get('version')}**\nПоследнее обновление:\n<t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online') if data.get('online') is not None else 'Недоступно'}`"  # Данные о онлайне и версии
-            embed.add_field(name=title, value=description, inline=True)
+        for i, item in enumerate(wot_data):
+            if 1 <= i <= 8:
+                data = item.get('data')
+                title = (
+                    f"{data.get('title')} {':flag_' + data.get('flag') + ':'}"
+                    if data.get('flag') is not None
+                    else data.get('title')
+                )
+                description = await format_server_description(data)
+                embed.add_field(name=title, value=description, inline=True)
     elif isinstance(server, int):
-        data: dict = results[server].get('data')
-        title = f"{data.get('title')} {':flag_' + data.get('flag') + ':' if data.get('flag') is not None else ''}"
-        embed.add_field(name=title,
-                        value=f"Версия: **{data.get('version')}**\nПоследнее обновление: <t:{data.get('version_updated_at')}>\nОбщий онлайн: `{data.get('online')}`",
-                        inline=False)
+        data = wot_data[server].get('data')
+        title = (
+            f"{data.get('title')} {':flag_' + data.get('flag') + ':'}"
+            if data.get('flag') is not None
+            else data.get('title')
+        )
+        embed.add_field(name=title, value=await format_server_description(data), inline=False)
         servers = list()
         for server in data.get('servers'):
             server_title = f"Название: `{server.get('name')}`"
-            server_online = f"{status_emoji.get(server.get('status'))} Онлайн: `{server.get('online')}`" if server.get(
-                'online') is not None else f"{status_emoji.get(server.get('status'))} {status_word.get(server.get('status'))}"
+            server_online = (
+                f"{status_emoji.get(server.get('status'))} Онлайн: `{server.get('online')}`"
+                if server.get('online') is not None
+                else f"{status_emoji.get(server.get('status'))} {status_word.get(server.get('status'))}"
+            )
             servers.append([server_title, server_online])
         for server in servers:
             embed.add_field(name=server[0], value=server[1], inline=True)
@@ -169,13 +193,13 @@ async def feedback(ctx: discord.Interaction):
     await ctx.response.send_modal(modal)
 
 
-async def get_wot_data():
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://api.wgstatus.com/api/data/wot") as response:
-            if response.status != 200:
-                raise IncorrectResponse
-            data = await response.json()
-            return data["results"][0]
+async def format_server_description(data):
+    description = (
+        f"Версия: **{data.get('version')}**\n"
+        f"Последнее обновление:\n<t:{data.get('version_updated_at')}>\n"
+        f"Общий онлайн: `{data.get('online') if data.get('online') is not None else 'Недоступно'}`"
+    )
+    return description
 
 
 async def send_analytics(user_id, action_name):
@@ -193,10 +217,15 @@ async def send_analytics(user_id, action_name):
         }],
     }
     async with aiohttp.ClientSession() as session:
-        await session.post(
-            f'https://www.google-analytics.com/'
-            f'mp/collect?measurement_id={GOOGLE_GCODE}&api_secret={GOOGLE_SECRET_KEY}',
-            json=params)
+        async with session.post(
+                f'https://www.google-analytics.com/'
+                f'mp/collect?measurement_id={GOOGLE_GCODE}&api_secret={GOOGLE_SECRET_KEY}',
+                json=params) as response:
+            if 200 <= response.status < 300:  # any codes 2**
+                logging.info(f"Analytics sent for user {user_id}: {action_name}")
+            else:
+                logging.error(
+                    f"Failed to send analytics for user {user_id}: {action_name}, HTTP status {response.status}")
 
 
 class IncorrectResponse(Exception):
