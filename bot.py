@@ -1,29 +1,20 @@
 import logging
 import os
-import shutil
 from datetime import datetime
 
 import aiohttp
 import discord
 from discord.ext import commands, tasks
-from dotenv import load_dotenv
 
-if not os.path.exists(".env"):
-    shutil.copy(".env.example", ".env")
-    exit(1)
+TOKEN = os.environ.get("DISCORD_TOKEN")
+GOOGLE_GCODE = os.environ.get("GOOGLE_GCODE")
+GOOGLE_SECRET_KEY = os.environ.get("GOOGLE_SECRET_KEY")
+TOPGG_TOKEN = os.environ.get("TOPGG_TOKEN")
+FEEDBACK_WEBHOOK_URL = os.environ.get("FEEDBACK_WEBHOOK_URL")
 
-load_dotenv()
-
-TOKEN: str = os.environ.get("DISCORD_TOKEN")
-GOOGLE_GCODE: str = os.environ.get("GOOGLE_GCODE")
-GOOGLE_SECRET_KEY: str = os.environ.get("GOOGLE_SECRET_KEY")
-TOPGG_TOKEN: str = os.environ.get("TOPGG_TOKEN")
-FEEDBACK_WEBHOOK_URL: str = os.environ.get("FEEDBACK_WEBHOOK_URL")
-
-file_log = logging.FileHandler('debug.log', encoding='utf-8')
 console_out = logging.StreamHandler()
 
-logging.basicConfig(handlers=(file_log, console_out),
+logging.basicConfig(handlers=[console_out],
                     format='[%(asctime)s | %(levelname)s]: %(message)s',
                     datefmt='%m.%d.%Y %H:%M:%S',
                     level=logging.INFO)
