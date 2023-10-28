@@ -1,0 +1,6 @@
+services:
+  bot:
+    env_file:
+      - .env
+    build:
+      context: .
