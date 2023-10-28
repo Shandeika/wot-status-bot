@@ -152,6 +152,15 @@ async def feedback(ctx: discord.Interaction):
     await send_analytics(user_id=ctx.user.id,
                          action_name=ctx.command.name)
 
+    if not FEEDBACK_WEBHOOK_URL:
+        embed = discord.Embed(
+            title="Ошибка обратной связи",
+            description="Бот не может отправить ваш отзыв, так как не указана ссылка на обратную связь. Свяжитесь с "
+                        "администратором",
+            color=discord.Color.red()
+        )
+        return await ctx.response.send_message(embed=embed, ephemeral=True)
+
     class Feedback(discord.ui.Modal, title="Отправить отзыв/предложение для разработчика"):
         theme = discord.ui.TextInput(
             label="Тема",
