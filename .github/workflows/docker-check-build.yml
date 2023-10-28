@@ -20,4 +20,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: false
-          tags: mrshandy/wot-status-bot:${{ steps.get_tag.outputs.TAG }}
+          tags: mrshandy/wot-status-bot:${{ secrets.DOCKER_TAG }}
