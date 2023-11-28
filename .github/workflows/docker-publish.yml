@@ -27,3 +27,10 @@ jobs:
         with:
           push: true
           tags: mrshandy/wot-status-bot:${{ secrets.DOCKER_TAG }}
+      -
+        name: Push portainer webhook
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+          method: POST
+          timeout: 30000
