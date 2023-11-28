@@ -34,11 +34,11 @@ async def on_ready():
     push_monitoring_data.start()
 
 
-@bot.tree.command(
+@bot.application_command(
     name="info",
     description="Информация о боте"
 )
-async def info(ctx: discord.Interaction):
+async def info(ctx: discord.ApplicationContext):
     await send_analytics(user_id=ctx.user.id,
                          action_name=ctx.command.name)
     embed = discord.Embed(
@@ -48,32 +48,31 @@ async def info(ctx: discord.Interaction):
                     "Репозиторий: [GitHub](https://github.com/Shandeika/wot-status-bot)\n"
                     "Сервер поддержки: [Shandy`s server](https://discord.gg/2BEfEAm)\n"
                     "Источник данных: https://wgstatus.com")
-    embed.add_field(name=f"Количество серверов", value=len(ctx.client.guilds), inline=False)
+    embed.add_field(name=f"Количество серверов", value=str(len(ctx.bot.guilds)), inline=False)
     embed.add_field(name="Мониторинг бота",
                     value="https://top.gg/bot/857360003512795167")
     await ctx.response.send_message(embed=embed)
 
 
-@bot.tree.command(
+@bot.application_command(
     name="status",
     description="Статус серверов World of Tanks"
 )
-@discord.app_commands.choices(
-    server=[
-        discord.app_commands.Choice(name="WoT RU", value=1),
-        discord.app_commands.Choice(name="WoT Common Test", value=2),
-        discord.app_commands.Choice(name="WoT Sandbox", value=3),
-        discord.app_commands.Choice(name="WoT EU", value=4),
-        discord.app_commands.Choice(name="WoT NA(USA)", value=5),
-        discord.app_commands.Choice(name="WoT ASIA", value=6),
-        discord.app_commands.Choice(name="WOT360 CN", value=7),
-        discord.app_commands.Choice(name="WoT ST", value=8)
+@discord.option(
+    name="server",
+    description="Выберите сервер для отображения статуса",
+    choices=[
+        discord.OptionChoice(name="WoT RU", value=1),
+        discord.OptionChoice(name="WoT Common Test", value=2),
+        discord.OptionChoice(name="WoT Sandbox", value=3),
+        discord.OptionChoice(name="WoT EU", value=4),
+        discord.OptionChoice(name="WoT NA(USA)", value=5),
+        discord.OptionChoice(name="WoT ASIA", value=6),
+        discord.OptionChoice(name="WOT360 CN", value=7),
+        discord.OptionChoice(name="WoT ST", value=8)
     ]
 )
-@discord.app_commands.describe(
-    server='Сервер, о котором нужно получить информацию'
-)
-async def status(ctx: discord.Interaction, server: int = None):
+async def status(ctx: discord.ApplicationContext, server: int = None):
     await send_analytics(user_id=ctx.user.id, action_name=f"{ctx.command.name}_{server if server else 'all'}")
     status_emoji = {
         "online": "<:online:741779665026547813>",
@@ -144,11 +143,11 @@ async def status(ctx: discord.Interaction, server: int = None):
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
-@bot.tree.command(
+@bot.application_command(
     name="feedback",
     description="Отправить отзыв/предложение для разработчика"
 )
-async def feedback(ctx: discord.Interaction):
+async def feedback(ctx: discord.ApplicationContext):
     await send_analytics(user_id=ctx.user.id,
                          action_name=ctx.command.name)
 
@@ -161,23 +160,26 @@ async def feedback(ctx: discord.Interaction):
         )
         return await ctx.response.send_message(embed=embed, ephemeral=True)
 
-    class Feedback(discord.ui.Modal, title="Отправить отзыв/предложение для разработчика"):
-        theme = discord.ui.TextInput(
+    class Feedback(discord.ui.Modal):
+        def __init__(self):
+            super().__init__(title="Отправить отзыв/предложение для разработчика")
+
+        theme = discord.ui.InputText(
             label="Тема",
-            style=discord.TextStyle.short,
+            style=discord.InputTextStyle.short,
             required=True,
             placeholder="Тема отзыва/предложения",
             custom_id="theme"
         )
-        feedback = discord.ui.TextInput(
+        feedback = discord.ui.InputText(
             label="Отзыв/предложение",
-            style=discord.TextStyle.long,
+            style=discord.InputTextStyle.long,
             required=True,
             placeholder="Текст отзыва/предложения",
             custom_id="feedback"
         )
 
-        async def on_submit(self, interaction: discord.Interaction, /) -> None:
+        async def callback(self, interaction: discord.Interaction) -> None:
             feedback_embed = discord.Embed(title=self.theme, description=self.feedback, timestamp=datetime.now(), )
             feedback_embed.set_footer(
                 text=f"USER_ID={interaction.user.id} GUILD_ID={interaction.guild.id} GUILD_NAME={interaction.guild.name}")
@@ -203,6 +205,8 @@ async def format_server_description(data):
 
 
 async def send_analytics(user_id, action_name):
+    if not GOOGLE_GCODE or not GOOGLE_SECRET_KEY:
+        return
     """
     Send record to Google Analytics
     """
