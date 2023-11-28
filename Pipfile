@@ -4,9 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"discord.py" = "==2.3.2"
 orjson = "*"
 aiohttp = ">=3.8.5"
+py-cord = "*"
 
 [dev-packages]
 
