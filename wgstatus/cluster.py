@@ -1,5 +1,8 @@
 import datetime
 from typing import List
+
+import discord_emoji
+
 from .server import Server
 
 
@@ -54,3 +57,13 @@ class Cluster:
         """Возвращает онлайн серверов в кластере
         Если онлайн неизвестен, возвращает строку "Недоступно" """
         return self._online if self._online else "Недоступно"
+
+    def flag_to_emoji(self):
+        if self._flag is None:
+            return None
+
+        try:
+            emoji_unicode = discord_emoji.to_unicode(f":flag_{self._flag}:")
+            return emoji_unicode
+        except ValueError:
+            return None
