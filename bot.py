@@ -135,8 +135,8 @@ async def feedback(ctx: discord.ApplicationContext):
 
         async def callback(self, interaction: discord.Interaction) -> None:
             feedback_embed = discord.Embed(
-                title=self.theme,
-                description=self.feedback,
+                title=self.theme.value,
+                description=self.feedback.value,
                 timestamp=datetime.now(),
             )
             feedback_embed.set_footer(
