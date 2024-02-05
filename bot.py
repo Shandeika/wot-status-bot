@@ -116,21 +116,22 @@ async def feedback(ctx: discord.ApplicationContext):
     class Feedback(discord.ui.Modal):
         def __init__(self):
             super().__init__(title="Отправить отзыв/предложение для разработчика")
-
-        theme = discord.ui.InputText(
-            label="Тема",
-            style=discord.InputTextStyle.short,
-            required=True,
-            placeholder="Тема отзыва/предложения",
-            custom_id="theme",
-        )
-        feedback = discord.ui.InputText(
-            label="Отзыв/предложение",
-            style=discord.InputTextStyle.long,
-            required=True,
-            placeholder="Текст отзыва/предложения",
-            custom_id="feedback",
-        )
+            self.theme = discord.ui.InputText(
+                label="Тема",
+                style=discord.InputTextStyle.short,
+                required=True,
+                placeholder="Тема отзыва/предложения",
+                custom_id="theme",
+            )
+            self.feedback = discord.ui.InputText(
+                label="Отзыв/предложение",
+                style=discord.InputTextStyle.long,
+                required=True,
+                placeholder="Текст отзыва/предложения",
+                custom_id="feedback",
+            )
+            self.add_item(self.theme)
+            self.add_item(self.feedback)
 
         async def callback(self, interaction: discord.Interaction) -> None:
             feedback_embed = discord.Embed(
